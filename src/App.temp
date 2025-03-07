@@ -1,0 +1,89 @@
+import React, { useRef, useState } from 'react';
+import { View, StyleSheet, PanResponder, Dimensions, TouchableOpacity, LayoutChangeEvent, GestureResponderEvent, PanResponderGestureState } from 'react-native';
+
+const NUM_CELLS = 24;
+const { width } = Dimensions.get('window');
+const CELL_MARGIN = 2;
+const CELL_SIZE = (width - (NUM_CELLS + 1) * CELL_MARGIN) / NUM_CELLS;
+
+type Layout = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+const TimeSlotSelector: React.FC = () => {
+  // 각 셀의 선택 상태 (true: 선택, false: 미선택)
+  const dragMode = useRef<'select' | 'deselect' | null>(null);
+  // 각 셀의 layout 정보를 저장 (측정된 위치와 크기)
+  const cellLayouts = useRef<Array<Layout | undefined>>([]);
+
+  // 셀의 layout이 결정되면 저장
+  const onCellLayout = (index: number, event: LayoutChangeEvent) => {
+    cellLayouts.current[index] = event.nativeEvent.layout;
+  };
+
+  const updateSelection = (gestureX: number) => {
+    // 터치 위치(gestureX)가 어느 셀에 해당하는지 계산
+    cellLayouts.current.forEach((layout, index) => {
+      if (!layout) return;
+      const cellStart = layout.x;
+      const cellEnd = layout.x + layout.width;
+      if (gestureX >= cellStart && gestureX <= cellEnd) {
+        setSelected(prev => {
+          // 이미 해당 상태라면 변경하지 않음
+          if (prev[index] === (dragMode.current === 'select')) return prev;
+          const newSelected = [...prev];
+          newSelected[index] = dragMode.current === 'select';
+          return newSelected;
+        });
+      }
+    });
+  };
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: (evt: GestureResponderEvent, gestureState: PanResponderGestureState) => {
+        isDragging.current = false;
+        const { locationX } = evt.nativeEvent;
+        // 터치 시작 위치에 해당하는 셀 판단
+        cellLayouts.current.forEach((layout, index) => {
+          if (!layout) return;
+          const cellStart = layout.x;
+          const cellEnd = layout.x + layout.width;
+          if (locationX >= cellStart && locationX <= cellEnd) {
+            // 해당 셀의 현재 상태에 따라 'select' 또는 'deselect' 모드 결정
+            dragMode.current = selected[index] ? 'deselect' : 'select';
+            setSelected(prev => {
+              const newSelected = [...prev];
+              newSelected[index] = dragMode.current === 'select';
+              return newSelected;
+            });
+          }
+        });
+      },
+      onPanResponderMove: (evt: GestureResponderEvent, gestureState: PanResponderGestureState) => {
+        isDragging.current = true;
+        const moveX = evt.nativeEvent.locationX;
+        updateSelection(moveX);
+      },
+      onPanResponderRelease: () => {
+        isDragging.current = false;
+        dragMode.current = null;
+      },
+    })
+  ).current;
+
+  // 단일 클릭 시 셀 토글
+  
+  return (
+  );
+};
+
+// {{ userSelect: "none" }}
+
+export default TimeSlotSelector;
+

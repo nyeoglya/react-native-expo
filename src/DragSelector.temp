@@ -1,0 +1,84 @@
+import React, { useRef, useState } from 'react';
+import { View, StyleSheet, PanResponder, Dimensions, TouchableOpacity, LayoutChangeEvent, GestureResponderEvent, PanResponderGestureState } from 'react-native';
+
+
+
+export default function DragSelector(
+  cell_num = 10,
+  cell_margin = 0,
+  width: number,
+  height: number
+) {
+  const cell_size = (width - cell_margin * cell_num) / height;
+  const isDragging = useRef<boolean>(false);
+  const [ leftIndex, setLeftIndex ] = useState(-1);
+  const [ rightIndex, setRightIndex ] = useState(-1);
+
+  const styles = StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      margin: cell_margin,
+    },
+    cell: {
+      width: cell_size, 
+      height: cell_size,
+      marginHorizontal: cell_margin,
+      borderRadius: 4,
+      borderWidth: 1,
+      borderColor: '#bdc3c7',
+    },
+  });
+
+  const toggleCell = (index: number) => {
+    setSelected(prev => {
+      const newSelected = [...prev];
+      newSelected[index] = !newSelected[index];
+      return newSelected;
+    });
+  };
+  
+  const pan = useRef(new Animated.ValueXY()).current;
+
+  const panResponder = useRef(
+    PanResponder.create({
+    onStartShouldSetPanResponder: () => true, // 터치 시작 시 PanResponder 활성화
+      onMoveShouldSetPanResponder: () => true, // 움직이기 시작할 때 활성화
+      onPanResponderGrant: () => {
+        pan.setOffset({
+          x: pan.x._value,
+          y: pan.y._value,
+        });
+        pan.setValue({ x: 0, y: 0 });
+      },
+      onPanResponderMove: Animated.event(
+        [
+          null, 
+          { dx: pan.x, dy: pan.y } // 움직임 감지
+        ],
+        { useNativeDriver: false }
+      ),
+      onPanResponderRelease: () => {
+        pan.flattenOffset(); // 현재 위치를 초기 위치로 설정
+      },
+    })
+  ).current;
+
+  return (
+    <View style={styles.container} {...panResponder.panHandlers}>
+      {selected.map((isOn, index) => (
+        <TouchableOpacity
+          key={index}
+          activeOpacity={0.8}
+          onPress={() => toggleCell(index)}
+          onLayout={(e) => onCellLayout(index, e)}
+          style={[
+            styles.cell,
+            { backgroundColor: isOn ? '#3498db' : '#ecf0f1' },
+          ]}
+        />
+      ))}
+    </View>
+  );
+
+}
+
