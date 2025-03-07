@@ -14,12 +14,13 @@ OS: Arch Linux
 
 ## How to setting
 ### 1. Install packages
+<!--
 ```
 yarn add expo@52.0.37 react@18 react-dom@18 react-native@0.76.7 react-native-web@0.19.13 @expo/ngrok@4.1.0
 ```
 
 Install the above packages, or simply write below.
-
+-->
 ```
 npx create-expo-app@latest
 ```
